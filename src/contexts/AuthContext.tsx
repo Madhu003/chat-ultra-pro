@@ -26,54 +26,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
       setLoading(false);
     });
     return unsubscribe;
   }, []);
 
   const signInWithGoogle = async () => {
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (error) {
-      console.error("Error signing in with Google", error);
-      throw error;
-    }
+    await signInWithPopup(auth, googleProvider);
   };
 
   const signInWithEmail = async (email: string, pass: string) => {
-    try {
-      await signInWithEmailAndPassword(auth, email, pass);
-    } catch (error) {
-      console.error("Error signing in with Email", error);
-      throw error;
-    }
+    await signInWithEmailAndPassword(auth, email, pass);
   };
 
   const signUpWithEmail = async (email: string, pass: string, name: string) => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-      await updateProfile(userCredential.user, { displayName: name });
-    } catch (error) {
-      console.error("Error signing up", error);
-      throw error;
-    }
+    const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+    await updateProfile(userCredential.user, { displayName: name });
+    setUser({ ...userCredential.user, displayName: name } as User);
   };
 
   const logout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Error signing out", error);
-    }
+    await signOut(auth);
   };
 
   return (
     <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, logout }}>
       {loading ? (
         <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
       ) : children}
     </AuthContext.Provider>

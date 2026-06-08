@@ -1,33 +1,39 @@
 import { useState } from 'react'
-import { Navbar } from './components/organisms/Navbar'
-import { ChatInterface } from './components/molecules/ChatInterface'
-import { Sidebar } from './components/organisms/Sidebar'
-import { useAuth } from './context/AuthContext'
-import { LoginPage } from './pages/Login'
+import { ChatArea } from './components/ChatArea'
+import { Sidebar } from './components/Sidebar'
+import { useAuth } from './contexts/AuthContext'
+import { Login } from './components/Login'
 
 function App() {
   const { user } = useAuth()
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null)
+  const [chatKey, setChatKey] = useState(0)
 
-  const handleNewChat = () => {
-    setSelectedSessionId(null)
+  const handleSelectSession = (id: string | null) => {
+    if (id === null) {
+      setChatKey(prev => prev + 1);
+    }
+    setSelectedSessionId(id)
   }
 
   if (!user) {
-    return <LoginPage />
+    return <Login />
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Navbar />
-      <div className="flex-1 flex overflow-hidden">
-        <Sidebar 
-          onSelectSession={setSelectedSessionId} 
-          onNewChat={handleNewChat}
-          activeSessionId={selectedSessionId}
-        />
-        <main className="flex-1 flex flex-col relative overflow-hidden">
-          <ChatInterface key={selectedSessionId} initialSessionId={selectedSessionId} />
+    <div className="flex h-screen w-full bg-background overflow-hidden">
+      <Sidebar 
+        onSelectSession={handleSelectSession} 
+        activeSessionId={selectedSessionId}
+      />
+      
+      <div className="flex-1 flex flex-col min-w-0 relative">
+        <main className="flex-1 overflow-hidden relative">
+          <ChatArea 
+            key={selectedSessionId ? selectedSessionId : `new-${chatKey}`} 
+            sessionId={selectedSessionId}
+            onSessionCreated={(id) => handleSelectSession(id)}
+          />
         </main>
       </div>
     </div>

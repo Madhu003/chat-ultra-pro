@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper to check if record belongs to the user
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // User Settings: Only the user can access their own keys
+    match /userSettings/{userId} {
+      allow read, write: if isAuthenticated() && isOwner(userId);
+    }
+
+    // Chat Sessions: Users can only see and manage their own sessions
+    match /chatSessions/{sessionId} {
+      allow read, write: if isAuthenticated() && isOwner(resource.data.userId);
+      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
+
+      // Messages sub-collection
+      match /messages/{messageId} {
+        allow read, write: if isAuthenticated() && 
+          get(/databases/$(database)/documents/chatSessions/$(sessionId)).data.userId == request.auth.uid;
+      }
+    }
+  }
+}
